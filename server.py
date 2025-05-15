@@ -704,10 +704,6 @@ def send_reply():
         return jsonify({"error": "Server error"}), 500
 
 
-@app.route("/init-db")
-def init_db():
-    create_tables()
-    return "✅ Tables created successfully"
 
 
 @app.route('/logout')
