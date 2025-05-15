@@ -24,7 +24,7 @@ app.config.update(
 )
 
 app.secret_key = os.getenv("SECRET_KEY", "supersecret")
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=["https://app.replicax.tech"])
 
 # ✅ Google OAuth using OpenID configuration
 oauth = OAuth(app)
@@ -156,7 +156,7 @@ def auth_callback():
     # ✅ Always store fallback refresh_token
     session['refresh_token'] = refresh_token or session.get('refresh_token')
 
-    return redirect('http://localhost:3000/email')
+    return redirect('https://app.replicax.tech/email')
 
 
 
@@ -702,6 +702,7 @@ def send_reply():
     except Exception as e:
         print("❌ Gmail send exception:", e)
         return jsonify({"error": "Server error"}), 500
+
 
 
 
