@@ -19,9 +19,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 app.config.update(
-    SESSION_COOKIE_SAMESITE="Lax",     # allows session cookies across localhost
-    SESSION_COOKIE_SECURE=False        # must be False for HTTP (not HTTPS)
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True
 )
+
 
 app.secret_key = os.getenv("SECRET_KEY", "supersecret")
 CORS(app, supports_credentials=True, origins=[
