@@ -24,7 +24,11 @@ app.config.update(
 )
 
 app.secret_key = os.getenv("SECRET_KEY", "supersecret")
-CORS(app, supports_credentials=True, origins=["https://app.replicax.tech"])
+CORS(app, supports_credentials=True, origins=[
+    "https://email.replicax.tech",
+    "https://app.replicax.tech",
+    "http://localhost:3000"  # Optional for local dev
+])
 
 # ✅ Google OAuth using OpenID configuration
 oauth = OAuth(app)
@@ -156,7 +160,7 @@ def auth_callback():
     # ✅ Always store fallback refresh_token
     session['refresh_token'] = refresh_token or session.get('refresh_token')
 
-    return redirect('https://app.replicax.tech/email')
+    return redirect('https://email.replicax.tech/email')
 
 
 
