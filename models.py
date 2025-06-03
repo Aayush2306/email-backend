@@ -6,11 +6,11 @@ def create_tables():
 
     # ⚠️ DROP tables first (order matters due to foreign key)
     cur.execute("DROP TABLE IF EXISTS emails;")
-    cur.execute("DROP TABLE IF EXISTS users;")
+    cur.execute("DROP TABLE IF EXISTS usersvibe;")
 
     # ✅ Recreate users table
     cur.execute("""
-        CREATE TABLE users (
+        CREATE TABLE usersvibe (
             id SERIAL PRIMARY KEY,
             google_id TEXT UNIQUE,
             name TEXT,
@@ -29,7 +29,7 @@ def create_tables():
     cur.execute("""
         CREATE TABLE emails (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
+            user_id INTEGER REFERENCES usersvibe(id),
             gmail_id TEXT,
             sender TEXT,
             subject TEXT,

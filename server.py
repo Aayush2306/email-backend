@@ -25,11 +25,7 @@ app.config.update(
 
 
 app.secret_key = os.getenv("SECRET_KEY", "supersecret")
-CORS(app, supports_credentials=True, origins=[
-    "https://email.replicax.tech",
-    "https://app.replicax.tech",
-    "http://localhost:3000"  # Optional for local dev
-])
+CORS(app, supports_credentials=True)
 
 # ✅ Google OAuth using OpenID configuration
 oauth = OAuth(app)
@@ -66,7 +62,7 @@ def refresh_access_token(user_id, refresh_token):
         new_token = response["access_token"]
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("UPDATE users SET access_token = %s WHERE id = %s", (new_token, user_id))
+        cur.execute("UPDATE usersvibe SET access_token = %s WHERE id = %s", (new_token, user_id))
         conn.commit()
         cur.close()
         put_conn(conn)
@@ -131,19 +127,19 @@ def auth_callback():
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("SELECT id FROM users WHERE google_id = %s", (google_id,))
+    cur.execute("SELECT id FROM usersvibe WHERE google_id = %s", (google_id,))
     user = cur.fetchone()
 
     if user is None:
         cur.execute("""
-            INSERT INTO users (google_id, name, email, picture, access_token, refresh_token)
+            INSERT INTO usersvibe (google_id, name, email, picture, access_token, refresh_token)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (google_id, name, email, picture, access_token, refresh_token))
         print("✅ New user created with refresh_token:", refresh_token)
     else:
         # Always update both if provided
         cur.execute("""
-            UPDATE users SET access_token = %s, refresh_token = %s WHERE google_id = %s
+            UPDATE usersvibe SET access_token = %s, refresh_token = %s WHERE google_id = %s
         """, (access_token, refresh_token, google_id))
         print("🔁 Existing user updated.")
 
@@ -161,7 +157,7 @@ def auth_callback():
     # ✅ Always store fallback refresh_token
     session['refresh_token'] = refresh_token or session.get('refresh_token')
 
-    return redirect('https://email.replicax.tech/email')
+    return redirect('http://localhost:3000/email')
 
 
 
@@ -187,7 +183,7 @@ def fetch_emails():
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("SELECT id, access_token, refresh_token, tone, preferences FROM users WHERE google_id = %s", (google_id,))
+    cur.execute("SELECT id, access_token, refresh_token, tone, preferences FROM usersvibe WHERE google_id = %s", (google_id,))
     user = cur.fetchone()
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -303,7 +299,7 @@ def summarize_important_emails():
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("SELECT id, tone, preferences FROM users WHERE google_id = %s", (google_id,))
+    cur.execute("SELECT id, tone, preferences FROM usersvibe WHERE google_id = %s", (google_id,))
     user = cur.fetchone()
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -380,7 +376,7 @@ def complete_setup():
         cur = conn.cursor()
 
         cur.execute("""
-            UPDATE users
+            UPDATE usersvibe
             SET tone = %s, preferences = %s, setup_complete = TRUE
             WHERE google_id = %s
         """, (tone, ','.join(preferences), user_id))
@@ -406,7 +402,7 @@ def check_setup():
 
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT setup_complete FROM users WHERE google_id = %s", (google_id,))
+    cur.execute("SELECT setup_complete FROM usersvibe WHERE google_id = %s", (google_id,))
     row = cur.fetchone()
     print(row)
     cur.close()
@@ -429,7 +425,7 @@ def get_saved_emails():
     cur = conn.cursor()
 
     # Get the internal user ID
-    cur.execute("SELECT id FROM users WHERE google_id = %s", (google_id,))
+    cur.execute("SELECT id FROM usersvibe WHERE google_id = %s", (google_id,))
     row = cur.fetchone()
     if not row:
         return jsonify({'error': 'User not found'}), 404
@@ -500,7 +496,7 @@ def get_email_by_id(email_id):
     cur.execute("""
         SELECT gmail_id, subject, sender, received_at, is_important, access_token, refresh_token, u.id
         FROM emails e
-        JOIN users u ON e.user_id = u.id
+        JOIN usersvibe u ON e.user_id = u.id
         WHERE e.id = %s
     """, (email_id,))
     row = cur.fetchone()
@@ -561,7 +557,7 @@ def generate_ai_reply(email_id):
     cur.execute("""
         SELECT gmail_id, subject, sender, u.tone, u.access_token, u.refresh_token, u.id
         FROM emails e
-        JOIN users u ON e.user_id = u.id
+        JOIN usersvibe u ON e.user_id = u.id
         WHERE e.id = %s
     """, (email_id,))
     row = cur.fetchone()
@@ -646,7 +642,7 @@ def send_reply():
     cur.execute("""
         SELECT gmail_id, subject, sender, u.access_token, u.refresh_token, u.id
         FROM emails e
-        JOIN users u ON e.user_id = u.id
+        JOIN usersvibe u ON e.user_id = u.id
         WHERE e.id = %s
     """, (email_id,))
     row = cur.fetchone()
@@ -720,5 +716,5 @@ def logout():
 
 
 if __name__ == '__main__':
-    #create_tables()
+    create_tables()
     app.run(debug=True, host="0.0.0.0")
